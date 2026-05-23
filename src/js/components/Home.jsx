@@ -17,29 +17,47 @@ const Home = () => {
 
         if (tarea.trim().length <= 3) {
             setError("Requiere más de tres caracteres para ese campo.");
-            return; // Cortamos la ejecución
+            return; 
         }
 
         setError("");
-        setLista([...lista, tarea.trim()]); 
-        setTarea("");
 
-        };
+      
+        if (enEdicion) {
+            // 1. Si estamos editando, recorremos la lista y modificamos solo la tarea seleccionada
+            const listaActualizada = lista.map((item, index) => 
+                index === idTareaAEditar ? tarea.trim() : item
+            );
+            setLista(listaActualizada);
+            setEnEdicion(false);        // Apagamos el modo edición
+            setIdTareaAEditar(null);    // Limpiamos el índice
+        } else {
+            // 2. Si NO estamos editando, añadimos la tarea como siempre
+            setLista([...lista, tarea.trim()]); 
+        }
 
-        const ACTIVAR_EDICION = (item, index) => {
+        setTarea(""); 
+    };
+
+    const ACTIVAR_EDICION = (item, index) => {
         setEnEdicion(true);
         setTarea(item);
         setIdTareaAEditar(index);
-    }
+    };
 
     const eliminarTarea = (indiceAEliminar) => {
         const nuevaLista = lista.filter((_, index) => index !== indiceAEliminar);
         setLista(nuevaLista);
+        
+      
+        if (idTareaAEditar === indiceAEliminar) {
+            setEnEdicion(false);
+            setTarea("");
+        }
     };
 
     return (
         <div className="container mt-5" style={{ maxWidth: '400px' }}>
-            {/* 1. Mover el estilo aquí afuera para que afecte a todos los items */}
             <style>{`
                 .item-tarea .btn-oculto {
                     opacity: 0;
@@ -59,31 +77,36 @@ const Home = () => {
                     placeholder="Escribe una tarea..."
                     value={tarea}
                     onChange={(e) => setTarea(e.target.value)}
-                    
                 /> 
-                <button className="btn btn-primary" type="submit">Añadir</button>
+               
+                <button 
+                    className={`btn ${enEdicion ? 'btn-warning' : 'btn-primary'}`} 
+                    type="submit"
+                >
+                    {enEdicion ? 'Editar' : 'Añadir'}
+                </button>
             </form>
 
-             {error && <div className="alert alert-danger text-center py-2">{error}</div>}
+            {error && <div className="alert alert-danger text-center py-2">{error}</div>}
 
             <ul className="list-group">
                 {lista.map((item, index) => (
-                    // 2. AGREGAR LA CLASE "item-tarea" AQUÍ
                     <li key={index} className="list-group-item d-flex justify-content-between align-items-center item-tarea">
-                        {item}
-                        <button 
-                                className="btn btn-sm btn-info me-1 btn-oculto"
+                        <span>{item}</span>
+                        <div>
+                            <button 
+                                className="btn btn-sm btn-info btn-oculto me-1"
                                 onClick={() => ACTIVAR_EDICION(item, index)}
                             >
                                 ✏️
                             </button>
-                        <button 
-                            // 3. AGREGAR LA CLASE "btn-oculto" AQUÍ
-                            className="btn btn-danger btn-sm btn-oculto"
-                            onClick={() => eliminarTarea(index)}
-                        >
-                            X
-                        </button>
+                            <button 
+                                className="btn btn-danger btn-sm btn-oculto"
+                                onClick={() => eliminarTarea(index)}
+                            >
+                                X
+                            </button>
+                        </div>
                     </li>
                 ))}
             </ul>
